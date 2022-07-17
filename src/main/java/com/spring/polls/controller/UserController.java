@@ -1,13 +1,17 @@
 package com.spring.polls.controller;
 
 import com.spring.polls.controller.helper.UserUpdate;
+import com.spring.polls.controller.helper.Validator;
 import com.spring.polls.controller.pojo.PollInfo;
 import com.spring.polls.controller.pojo.UserInfo;
 import com.spring.polls.controller.pojo.UserRegister;
 import com.spring.polls.models.entities.Poll;
 import com.spring.polls.models.entities.User;
 import com.spring.polls.models.repositories.UserRepository;
+import com.spring.polls.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,22 +21,23 @@ import java.util.ArrayList;
 @RestController
 public class UserController {
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private UserUpdate userUpdate;
-    @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserService userService;
     @PostMapping(value = "/user/create")
-    public void createUser(@RequestBody UserRegister userRegister){
+    public ResponseEntity<String> createUser(@RequestBody UserRegister userRegister){
         userRegister.setPassword(passwordEncoder.encode(userRegister.getPassword()));
         User user=new User(userRegister);
-        userRepository.save(user);
+        userService.createUser(user);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
     @GetMapping(value = "/user/{username}")
-    public UserInfo readUser(@PathVariable String username){
-        return new UserInfo(userRepository.findByUsername(username));
+    public ResponseEntity<UserInfo> readUser(@PathVariable String username){
+        return new UserInfo(userService.getUserByUsername(username))
     }
-    @GetMapping("/user/poll/{username}")
+
+    //Implement later, closing for now
+    /*@GetMapping("/user/poll/{username}")
     public ArrayList<PollInfo> readPoll(@PathVariable String username){
         ArrayList<PollInfo> an=new ArrayList<>();
         for(Poll poll:userRepository.findByUsername(username).getPollList()){
@@ -40,13 +45,21 @@ public class UserController {
                 an.add(new PollInfo(poll));
         }
         return an;
-    }
+    }*/
+
     @PutMapping(value = "/user")
     public void updateUser(@RequestBody UserInfo userInfo, Principal principal){
-        userUpdate.infoUpdate(userInfo,userRepository.findByUsername(principal.getName()));
+        if(!Validator.stringEmptyOrNull(userInfo.getEmail()))
+            userService.emailExist(userInfo.getEmail());
+        if(!Validator.stringEmptyOrNull(userInfo.getUsername()))
+            userService.usernameExist(userInfo.getUsername());
+        User user=userService.getUserByUsername(principal.getName())
+        user.fillProperty(userInfo);
+        userService.updateUser(user);
+
     }
     @DeleteMapping(value = "/user")
     public void deleteUser(Principal principal){
-        userRepository.delete(userRepository.findByUsername(principal.getName()));
+        userService.deleteUser(userService.getUserByUsername(principal.getName()).getId());
     }
 }

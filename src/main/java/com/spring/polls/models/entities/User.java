@@ -1,6 +1,8 @@
 package com.spring.polls.models.entities;
 
 
+import com.spring.polls.controller.helper.Validator;
+import com.spring.polls.controller.pojo.UserInfo;
 import com.spring.polls.controller.pojo.UserRegister;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -113,6 +115,19 @@ public class User implements UserDetails {
         this.email=userRegister.getEmail();
         this.username=userRegister.getUsername();
         this.password=userRegister.getPassword();
+    }
+
+    public void fillProperty(UserInfo userInfo){
+        if(!Validator.stringEmptyOrNull(userInfo.getEmail()))
+            setEmail(userInfo.getEmail());
+        if(!Validator.stringEmptyOrNull(userInfo.getFirstName()))
+            setFirstName(userInfo.getFirstName());
+        if(!Validator.stringEmptyOrNull(userInfo.getLastName()))
+            setLastName(userInfo.getLastName());
+        if(!Validator.stringEmptyOrNull(userInfo.getPhoneNumber()))
+            setPhn(userInfo.getPhoneNumber());
+        if(!Validator.stringEmptyOrNull(userInfo.getUsername()))
+            setUsername(userInfo.getUsername());
     }
 
     public String getFirstName() {
