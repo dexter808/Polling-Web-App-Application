@@ -1,13 +1,9 @@
 package com.spring.polls.controller;
 
-import com.spring.polls.controller.helper.UserUpdate;
 import com.spring.polls.controller.helper.Validator;
-import com.spring.polls.controller.pojo.PollInfo;
 import com.spring.polls.controller.pojo.UserInfo;
 import com.spring.polls.controller.pojo.UserRegister;
-import com.spring.polls.models.entities.Poll;
 import com.spring.polls.models.entities.User;
-import com.spring.polls.models.repositories.UserRepository;
 import com.spring.polls.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
 
 @RestController
 public class UserController {
@@ -29,11 +24,13 @@ public class UserController {
         userRegister.setPassword(passwordEncoder.encode(userRegister.getPassword()));
         User user=new User(userRegister);
         userService.createUser(user);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>("User Created",HttpStatus.OK);
     }
     @GetMapping(value = "/user/{username}")
     public ResponseEntity<UserInfo> readUser(@PathVariable String username){
-        return new UserInfo(userService.getUserByUsername(username))
+        ResponseEntity<UserInfo> userInfoResponseEntity = new ResponseEntity<>(new UserInfo(userService.getUserByUsername(username)),HttpStatus.OK);
+        userInfoResponseEntity.getBody().setMessage("User Found");
+        return userInfoResponseEntity;
     }
 
     //Implement later, closing for now
@@ -53,7 +50,7 @@ public class UserController {
             userService.emailExist(userInfo.getEmail());
         if(!Validator.stringEmptyOrNull(userInfo.getUsername()))
             userService.usernameExist(userInfo.getUsername());
-        User user=userService.getUserByUsername(principal.getName())
+        User user=userService.getUserByUsername(principal.getName());
         user.fillProperty(userInfo);
         userService.updateUser(user);
 

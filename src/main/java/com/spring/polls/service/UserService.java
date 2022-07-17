@@ -1,8 +1,8 @@
 package com.spring.polls.service;
 
 import com.spring.polls.controller.helper.Validator;
-import com.spring.polls.exception.NoSuchUserExistsException;
-import com.spring.polls.exception.UserAlreadyExistsException;
+import com.spring.polls.exception.user.NoSuchUserExistsException;
+import com.spring.polls.exception.user.UserAlreadyExistsException;
 import com.spring.polls.models.entities.User;
 import com.spring.polls.models.repositories.UserRepository;
 import com.spring.polls.service.interfaces.PollsUserService;
@@ -25,7 +25,7 @@ public class UserService implements PollsUserService {
     @Override
     public User getUserByUsername(String username){
         if(!userRepository.existsUserByUsername(username))
-            throw new UserAlreadyExistsException("User does not exist with the username");
+            throw new NoSuchUserExistsException("User does not exist with the username");
         return userRepository.findByUsername(username);
     }
     @Override

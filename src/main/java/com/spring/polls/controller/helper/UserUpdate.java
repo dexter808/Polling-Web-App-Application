@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserUpdate {
-    @Autowired
+  /*  @Autowired
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -18,7 +18,7 @@ public class UserUpdate {
     public void infoUpdate(UserInfo userInfo,User user){
         UserInfo userInfo1=new UserInfo(user);
         userInfo1.copyInfo(userInfo);
-        userRepository.updateUserInfoById(userInfo1.getFirstname()
+        userRepository.updateUserInfoById(userInfo1.getFirstName()
                 ,userInfo1.getLastName()
                 , userInfo1.getPhoneNumber()
                 , userInfo1.getEmail()

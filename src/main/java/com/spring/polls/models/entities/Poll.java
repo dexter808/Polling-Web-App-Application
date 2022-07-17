@@ -1,5 +1,6 @@
 package com.spring.polls.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.spring.polls.controller.pojo.PollInfo;
 
 import javax.persistence.*;
@@ -11,6 +12,7 @@ public class Poll {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
+
     @ManyToOne
     @JoinColumn(name = "user_id",nullable = false)
     private User user;

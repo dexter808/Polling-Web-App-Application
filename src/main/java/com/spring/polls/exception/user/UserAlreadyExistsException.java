@@ -1,4 +1,4 @@
-package com.spring.polls.exception;
+package com.spring.polls.exception.user;
 
 public class UserAlreadyExistsException extends RuntimeException{
     private String message;

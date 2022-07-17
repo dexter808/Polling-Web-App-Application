@@ -1,6 +1,6 @@
 package com.spring.polls.controller.helper;
 
-import com.spring.polls.exception.UserPropertyPropertyValidationException;
+import com.spring.polls.exception.user.UserPropertyValidationException;
 import com.spring.polls.models.entities.User;
 
 import java.util.regex.Pattern;
@@ -16,13 +16,13 @@ public class Validator {
     }
     public static boolean validateUserNullValues(User user){
         if(stringEmptyOrNull(user.getEmail()))
-            throw new UserPropertyPropertyValidationException("User email is required");
+            throw new UserPropertyValidationException("User email is required");
         if(stringEmptyOrNull(user.getEmail()))
-            throw new UserPropertyPropertyValidationException("User email is required");
+            throw new UserPropertyValidationException("User email is required");
         if(stringEmptyOrNull(user.getFirstName()))
-            throw new UserPropertyPropertyValidationException("User firsName is required");
+            throw new UserPropertyValidationException("User firsName is required");
         if(stringEmptyOrNull(user.getLastName()))
-            throw new UserPropertyPropertyValidationException("User lastName is required");
+            throw new UserPropertyValidationException("User lastName is required");
         return true;
     }
     public static boolean validateEmail(String email){
@@ -35,9 +35,9 @@ public class Validator {
     public static boolean validateUser(User user){
         validateUserNullValues(user);
         if(!validateEmail(user.getEmail()))
-            throw new UserPropertyPropertyValidationException("User email invalid");
-        if(!passwordValidation(user.getPassword()))
-            throw new UserPropertyPropertyValidationException("User password does not match minimum constraints");
+            throw new UserPropertyValidationException("User email invalid");
+        if(passwordValidation(user.getPassword()))
+            throw new UserPropertyValidationException("User password does not match minimum constraints");
         return true;
     }
 }

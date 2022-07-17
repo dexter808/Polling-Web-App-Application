@@ -1,22 +1,19 @@
 package com.spring.polls.controller.pojo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.polls.controller.helper.ResponseObject;
 import com.spring.polls.models.entities.User;
 
 public class UserInfo extends ResponseObject {
     private String username;
-    private String firstName,lastName;
-    private String email,phoneNumber;
+
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
     public UserInfo(){
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
 
     public UserInfo(User user) {
         username=user.getUsername();
@@ -41,13 +38,13 @@ public class UserInfo extends ResponseObject {
         if(userInfo.firstName!=null)
             firstName=userInfo.firstName;
         if(userInfo.lastName!=null)
-            firstName=userInfo.lastName;
+            lastName=userInfo.lastName;
         if(userInfo.username!=null)
-            firstName=userInfo.username;
+            username=userInfo.username;
         if(userInfo.email!=null)
-            firstName=userInfo.email;
+            email=userInfo.email;
         if(userInfo.phoneNumber!=null)
-            firstName=userInfo.phoneNumber;
+            phoneNumber=userInfo.phoneNumber;
     }
     public String getPhoneNumber() {
         return phoneNumber;
@@ -57,7 +54,7 @@ public class UserInfo extends ResponseObject {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getFirstname() {
+    public String getFirstName() {
         return firstName;
     }
 
