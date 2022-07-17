@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserUpdate {
+    //Not used as of now
   /*  @Autowired
     private UserRepository userRepository;
     @Autowired
