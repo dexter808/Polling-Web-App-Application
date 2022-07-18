@@ -24,10 +24,15 @@ public class UserService implements PollsUserService {
     }
     @Override
     public User getUserByUsername(String username){
-        if(!userRepository.existsUserByUsername(username))
-            throw new NoSuchUserExistsException("User does not exist with the username");
+        doeesNotExistsUsername(username);
         return userRepository.findByUsername(username);
     }
+
+    public void doeesNotExistsUsername(String username) {
+        if(!userRepository.existsUserByUsername(username))
+            throw new NoSuchUserExistsException("User does not exist with the username");
+    }
+
     @Override
     public void createUser(User user) {
         Validator.validateUser(user);

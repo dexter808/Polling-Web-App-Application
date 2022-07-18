@@ -6,6 +6,7 @@ import com.spring.polls.models.entities.User;
 public interface PollsUserService {
     //Get user by id
     User getUserById(Long id);
+    void doeesNotExistsUsername(String username);
     User getUserByUsername(String username);
 
     //Create user

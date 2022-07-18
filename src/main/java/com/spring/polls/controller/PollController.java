@@ -3,12 +3,15 @@ package com.spring.polls.controller;
 import com.spring.polls.controller.helper.ResponseObject;
 import com.spring.polls.controller.pojo.PollInfo;
 import com.spring.polls.controller.pojo.PollResult;
+import com.spring.polls.exception.user.NoSuchUserExistsException;
 import com.spring.polls.models.entities.Option;
 import com.spring.polls.models.entities.PEStorage;
 import com.spring.polls.models.entities.PUStorage;
 import com.spring.polls.models.entities.Poll;
 import com.spring.polls.models.repositories.*;
 import com.spring.polls.service.EmailSenderService;
+import com.spring.polls.service.UserService;
+import com.spring.polls.service.interfaces.PollsService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,10 @@ import java.util.regex.Pattern;
 
 @RestController
 public class PollController {
+    @Autowired
+    private PollsService pollsService;
+    @Autowired
+    private UserService userService;
     @Autowired
     private PollRepository pollRepository;
 
@@ -45,13 +52,15 @@ public class PollController {
         return pattern.matcher(s).matches();
     }
     @PostMapping("/poll")
-    public PollInfo pollCreate(@RequestBody PollInfo pollInfo, Principal principal){
+    public ResponseEntity<PollInfo> pollCreate(@RequestBody PollInfo pollInfo, Principal principal){
         Poll poll=new Poll(userRepository.findByUsername(principal.getName()),pollInfo.getTitle(),pollInfo.getDescription(),pollInfo.isPrivate());
-        pollRepository.save(poll);
+        pollsService.createPoll(poll);
+//        pollRepository.save(poll);
         pollInfo.getOptions().forEach((K,V)->optionRepository.save(new Option(poll,V,K)));
         pollInfo.setPollId(poll.getId());
         if(pollInfo.isPrivate()){
-            System.out.println("Private poll");
+            //System.out.println("Private poll");
+            /* Email Invite, Closing this feature for now
             for(String email:pollInfo.getAuthorizedEmail()){
                 System.out.println("Got "+email+"---------");
                 if(PollController.checkValid(email))
@@ -60,42 +69,42 @@ public class PollController {
                     peStorageRepository.save(new PEStorage(pollInfo.getPollId(),email,UID));
                     emailSenderService.sendInviteMail(email,principal.getName(),pollInfo,UID);
                 }
-            }
+            }*/
             for(String username:pollInfo.getAuthorizedUsername()){
                 System.out.println("Got "+username+"---------");
-                if(userRepository.existsUserByUsername(username))
-                    puStorageRepository.save(new PUStorage(pollInfo.getPollId(),username));
+                userService.doeesNotExistsUsername(username);
+                puStorageRepository.save(new PUStorage(pollInfo.getPollId(),username));
             }
         }
-        return pollInfo;
+        return new ResponseEntity<>(pollInfo,HttpStatus.OK);
     }
 
     @GetMapping("/poll/private")
-    public ArrayList<PollInfo> readPoll(Principal principal){
+    public ResponseEntity<ArrayList<PollInfo>> readPoll(Principal principal){
         ArrayList<PollInfo> an=new ArrayList<>();
-        for(Poll poll:userRepository.findByUsername(principal.getName()).getPollList()){
+        for(Poll poll:userService.getUserByUsername(principal.getName()).getPollList()){
             if((poll.isPrivate()))
                 an.add(new PollInfo(poll));
         }
-        return an;
+        return new ResponseEntity<>(an,HttpStatus.OK);
     }
     @GetMapping("/poll/{pollId}")
     public ResponseEntity<ResponseObject> readSpecificPoll(@PathVariable Long pollId){
-        PollInfo pollInfo=new PollInfo(pollRepository.getById(pollId));
+        PollInfo pollInfo=new PollInfo(pollsService.getPollById(pollId));
         if(pollInfo.isPrivate())
             return new ResponseEntity<>(new ResponseObject("Not Allowed"),HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<>(pollInfo,HttpStatus.OK);
     }
     @GetMapping("/poll/private/{pollId}")
     public ResponseEntity<ResponseObject> readSpecificPoll(Principal principal,@PathVariable Long pollId){
-        PollInfo pollInfo=new PollInfo(pollRepository.getById(pollId));
+        PollInfo pollInfo=new PollInfo(pollsService.getPollById(pollId));
         if(!(puStorageRepository.existsPUStorageByPollIdAndUsername(pollId,principal.getName())))
             return new ResponseEntity<>(new ResponseObject("Not Allowed"),HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<>(pollInfo,HttpStatus.OK);
     }
     @GetMapping("/poll/result/{pollId}")
     public ResponseEntity<ResponseObject> getResult(@PathVariable Long pollId,Principal principal){
-        Poll poll=pollRepository.getById(pollId);
+        Poll poll=pollsService.getPollById(pollId);
         if(poll.isPrivate()){
             if(puStorageRepository.existsPUStorageByPollIdAndUsername(pollId,principal.getName()) || poll.getUser().getUsername().equals(principal.getName()))
                 return new ResponseEntity<>(new PollResult(poll),HttpStatus.OK);
@@ -107,10 +116,13 @@ public class PollController {
     }
     @DeleteMapping("/poll/{pollId}")
     public ResponseEntity<ResponseObject> deletePoll(@PathVariable Long pollId, Principal principal){
-        Poll poll=pollRepository.getById(pollId);
+        Poll poll=pollsService.getPollById(pollId);
         if(!(poll.getUser().getUsername().equals(principal.getName())))
         return new ResponseEntity<>(new ResponseObject("Not Authorized"), HttpStatus.UNAUTHORIZED);
         pollRepository.delete(poll);
+        for(Option option:poll.getOptions())
+            if(optionRepository.existsById(option.getId()))
+            optionRepository.delete(option);
         return new ResponseEntity<>(new ResponseObject("Success"),HttpStatus.OK);
     }
 }
