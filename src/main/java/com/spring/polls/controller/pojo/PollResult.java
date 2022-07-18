@@ -6,7 +6,7 @@ import com.spring.polls.models.entities.Poll;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PollResult extends ResponseObject{
+public class PollResult{
     String title;
     String description;
     HashMap<Integer,OptionInfo> options=new HashMap<>();

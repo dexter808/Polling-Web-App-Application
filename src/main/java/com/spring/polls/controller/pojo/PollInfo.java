@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class PollInfo extends ResponseObject {
+public class PollInfo{
     private String title;
     private String description;
     private Long pollId;

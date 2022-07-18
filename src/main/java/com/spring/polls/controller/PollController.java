@@ -29,31 +29,16 @@ public class PollController {
     private PollsService pollsService;
     @Autowired
     private UserService userService;
-    @Autowired
-    private PollRepository pollRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private OptionRepository optionRepository;
 
     @Autowired
-    private PEStorageRepository peStorageRepository;
-
-    @Autowired
     private PUStorageRepository puStorageRepository;
 
-    @Autowired
-    private EmailSenderService emailSenderService;
-
-    static Pattern pattern=Pattern.compile("^(.+)@(.+)$");
-    public static boolean checkValid(String s){
-        return pattern.matcher(s).matches();
-    }
     @PostMapping("/poll")
-    public ResponseEntity<PollInfo> pollCreate(@RequestBody PollInfo pollInfo, Principal principal){
-        Poll poll=new Poll(userRepository.findByUsername(principal.getName()),pollInfo.getTitle(),pollInfo.getDescription(),pollInfo.isPrivate());
+    public ResponseEntity<ResponseObject<PollInfo>> pollCreate(@RequestBody PollInfo pollInfo, Principal principal){
+        Poll poll=new Poll(userService.getUserByUsername(principal.getName()),pollInfo.getTitle(),pollInfo.getDescription(),pollInfo.isPrivate());
         pollsService.createPoll(poll);
 //        pollRepository.save(poll);
         pollInfo.getOptions().forEach((K,V)->optionRepository.save(new Option(poll,V,K)));
@@ -71,58 +56,114 @@ public class PollController {
                 }
             }*/
             for(String username:pollInfo.getAuthorizedUsername()){
-                System.out.println("Got "+username+"---------");
                 userService.doeesNotExistsUsername(username);
                 puStorageRepository.save(new PUStorage(pollInfo.getPollId(),username));
             }
         }
-        return new ResponseEntity<>(pollInfo,HttpStatus.OK);
+        return new ResponseEntity<>(
+                new ResponseObject<>("Poll Created",
+                        pollInfo),
+                HttpStatus.OK
+        );
     }
 
     @GetMapping("/poll/private")
-    public ResponseEntity<ArrayList<PollInfo>> readPoll(Principal principal){
+    public ResponseEntity<ResponseObject<ArrayList<PollInfo>>> readPoll(Principal principal){
         ArrayList<PollInfo> an=new ArrayList<>();
         for(Poll poll:userService.getUserByUsername(principal.getName()).getPollList()){
             if((poll.isPrivate()))
                 an.add(new PollInfo(poll));
         }
-        return new ResponseEntity<>(an,HttpStatus.OK);
+        return new ResponseEntity<>(
+                new ResponseObject<ArrayList<PollInfo>>(
+                        "Polls Found",
+                        an
+                ),
+                HttpStatus.OK
+        );
     }
     @GetMapping("/poll/{pollId}")
-    public ResponseEntity<ResponseObject> readSpecificPoll(@PathVariable Long pollId){
+    public ResponseEntity<ResponseObject<PollInfo>> readSpecificPoll(@PathVariable Long pollId){
         PollInfo pollInfo=new PollInfo(pollsService.getPollById(pollId));
         if(pollInfo.isPrivate())
-            return new ResponseEntity<>(new ResponseObject("Not Allowed"),HttpStatus.UNAUTHORIZED);
-        return new ResponseEntity<>(pollInfo,HttpStatus.OK);
+            return new ResponseEntity<>(new ResponseObject<PollInfo>("Not Allowed",null),HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(
+                new ResponseObject<>(
+                        "Poll Found",
+                        pollInfo
+                ),
+                HttpStatus.OK
+        );
     }
     @GetMapping("/poll/private/{pollId}")
-    public ResponseEntity<ResponseObject> readSpecificPoll(Principal principal,@PathVariable Long pollId){
+    public ResponseEntity<ResponseObject<PollInfo>> readSpecificPoll(Principal principal,@PathVariable Long pollId){
         PollInfo pollInfo=new PollInfo(pollsService.getPollById(pollId));
         if(!(puStorageRepository.existsPUStorageByPollIdAndUsername(pollId,principal.getName())))
-            return new ResponseEntity<>(new ResponseObject("Not Allowed"),HttpStatus.UNAUTHORIZED);
-        return new ResponseEntity<>(pollInfo,HttpStatus.OK);
+            return new ResponseEntity<>(
+                    new ResponseObject<PollInfo>(
+                            "Not Authorized",
+                            null
+                    ),
+                    HttpStatus.UNAUTHORIZED
+            );
+        return new ResponseEntity<>(
+                new ResponseObject<PollInfo>(
+                        "OK",
+                        pollInfo
+                ),
+                HttpStatus.OK
+        );
     }
     @GetMapping("/poll/result/{pollId}")
-    public ResponseEntity<ResponseObject> getResult(@PathVariable Long pollId,Principal principal){
+    public ResponseEntity<ResponseObject<PollResult>> getResult(@PathVariable Long pollId,Principal principal){
         Poll poll=pollsService.getPollById(pollId);
         if(poll.isPrivate()){
             if(puStorageRepository.existsPUStorageByPollIdAndUsername(pollId,principal.getName()) || poll.getUser().getUsername().equals(principal.getName()))
-                return new ResponseEntity<>(new PollResult(poll),HttpStatus.OK);
+                return new ResponseEntity<>(
+                        new ResponseObject<PollResult>(
+                                "Poll Result Found",
+                                new PollResult(poll)
+                        ),
+                        HttpStatus.OK
+                );
             else
-                return new ResponseEntity<>(new ResponseObject("Not authorized"),HttpStatus.UNAUTHORIZED);
+                return new ResponseEntity<>(
+                        new ResponseObject<PollResult>(
+                                "Not authorized",
+                                null
+                        ),
+                        HttpStatus.UNAUTHORIZED
+                );
         }else{
-            return new ResponseEntity<>(new PollResult(poll),HttpStatus.OK);
+            return new ResponseEntity<>(
+                    new ResponseObject<PollResult>(
+                            "Poll Result Found",
+                            new PollResult(poll)
+                    ),
+                    HttpStatus.OK
+            );
         }
     }
     @DeleteMapping("/poll/{pollId}")
-    public ResponseEntity<ResponseObject> deletePoll(@PathVariable Long pollId, Principal principal){
+    public ResponseEntity<ResponseObject<String>> deletePoll(@PathVariable Long pollId, Principal principal){
         Poll poll=pollsService.getPollById(pollId);
         if(!(poll.getUser().getUsername().equals(principal.getName())))
-        return new ResponseEntity<>(new ResponseObject("Not Authorized"), HttpStatus.UNAUTHORIZED);
-        pollRepository.delete(poll);
+        return new ResponseEntity<>(new ResponseObject<String>(
+                "Not Authorized",
+                "DENIED"
+                ),
+                HttpStatus.UNAUTHORIZED
+        );
+        pollsService.delete(poll);
         for(Option option:poll.getOptions())
             if(optionRepository.existsById(option.getId()))
             optionRepository.delete(option);
-        return new ResponseEntity<>(new ResponseObject("Success"),HttpStatus.OK);
+        return new ResponseEntity<>(
+                new ResponseObject<String>(
+                        "Success",
+                        "DONE"
+                ),
+                HttpStatus.OK
+        );
     }
 }

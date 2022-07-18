@@ -1,7 +1,21 @@
 package com.spring.polls.controller.helper;
 
-public class ResponseObject {
+public class ResponseObject<Result> {
     String message;
+    Result result;
+
+    public Result getResult() {
+        return result;
+    }
+
+    public void setResult(Result result) {
+        this.result = result;
+    }
+
+    public ResponseObject(String message, Result result) {
+        this.message = message;
+        this.result = result;
+    }
 
     public ResponseObject(){
     }

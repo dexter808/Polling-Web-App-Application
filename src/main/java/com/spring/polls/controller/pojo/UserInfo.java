@@ -4,9 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.polls.controller.helper.ResponseObject;
 import com.spring.polls.models.entities.User;
 
-public class UserInfo extends ResponseObject {
+public class UserInfo{
     private String username;
-
     private String firstName;
     private String lastName;
     private String email;

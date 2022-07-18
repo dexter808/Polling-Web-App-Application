@@ -16,8 +16,7 @@ public class PollServiceImpl implements PollsService {
 
     @Override
     public Poll getPollById(Long id) {
-        if(!pollRepository.existsById(id))
-            throw new NoSuchPollException("Poll with this poll_id does not exist");
+        existPoll(id);
         return pollRepository.getById(id);
     }
 
@@ -26,5 +25,16 @@ public class PollServiceImpl implements PollsService {
         if(!pollRepository.existsById(poll.getId()))
             throw new PollAlreadyExistException("This poll_id has been taken");
         pollRepository.save(poll);
+    }
+
+    @Override
+    public void delete(Poll poll) {
+        existPoll(poll.getId());
+        pollRepository.delete(poll);
+    }
+
+    private void existPoll(Long id) {
+        if(!pollRepository.existsById(id))
+            throw new NoSuchPollException("Poll with this poll_id does not exist");
     }
 }
