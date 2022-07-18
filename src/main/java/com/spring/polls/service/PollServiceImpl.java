@@ -22,7 +22,7 @@ public class PollServiceImpl implements PollsService {
 
     @Override
     public void createPoll(Poll poll) {
-        if(!pollRepository.existsById(poll.getId()))
+        if(poll.getId()!=null && !pollRepository.existsById(poll.getId()))
             throw new PollAlreadyExistException("This poll_id has been taken");
         pollRepository.save(poll);
     }
