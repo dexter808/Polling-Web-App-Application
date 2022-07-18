@@ -40,7 +40,6 @@ public class PollController {
     public ResponseEntity<ResponseObject<PollInfo>> pollCreate(@RequestBody PollInfo pollInfo, Principal principal){
         Poll poll=new Poll(userService.getUserByUsername(principal.getName()),pollInfo.getTitle(),pollInfo.getDescription(),pollInfo.isPrivate());
         pollsService.createPoll(poll);
-//        pollRepository.save(poll);
         pollInfo.getOptions().forEach((K,V)->optionRepository.save(new Option(poll,V,K)));
         pollInfo.setPollId(poll.getId());
         if(pollInfo.isPrivate()){
@@ -98,6 +97,14 @@ public class PollController {
     @GetMapping("/poll/private/{pollId}")
     public ResponseEntity<ResponseObject<PollInfo>> readSpecificPoll(Principal principal,@PathVariable Long pollId){
         PollInfo pollInfo=new PollInfo(pollsService.getPollById(pollId));
+        if(!pollInfo.isPrivate())
+            return new ResponseEntity<>(
+                    new ResponseObject<PollInfo>(
+                            "Used only for private polls",
+                            null
+                    ),
+                    HttpStatus.BAD_REQUEST
+            );
         if(!(puStorageRepository.existsPUStorageByPollIdAndUsername(pollId,principal.getName())))
             return new ResponseEntity<>(
                     new ResponseObject<PollInfo>(
